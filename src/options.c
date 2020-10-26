@@ -289,7 +289,7 @@ int opt_get_ip_multicast_if(lua_State *L, p_socket ps)
 {
     struct in_addr val;
     socklen_t len = sizeof(val);
-    if (getsockopt(*ps, IPPROTO_IP, IP_MULTICAST_IF, (char *) &val, &len) < 0) {
+    if (getsockopt(ps->fd, IPPROTO_IP, IP_MULTICAST_IF, (char *) &val, &len) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, "getsockopt failed");
         return 2;
@@ -335,7 +335,7 @@ int opt_get_error(lua_State *L, p_socket ps)
 {
     int val = 0;
     socklen_t len = sizeof(val);
-    if (getsockopt(*ps, SOL_SOCKET, SO_ERROR, (char *) &val, &len) < 0) {
+    if (getsockopt(ps->fd, SOL_SOCKET, SO_ERROR, (char *) &val, &len) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, "getsockopt failed");
         return 2;
@@ -398,7 +398,7 @@ static
 int opt_get(lua_State *L, p_socket ps, int level, int name, void *val, int* len)
 {
     socklen_t socklen = *len;
-    if (getsockopt(*ps, level, name, (char *) val, &socklen) < 0) {
+    if (getsockopt(ps->fd, level, name, (char *) val, &socklen) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, "getsockopt failed");
         return 2;
@@ -410,7 +410,7 @@ int opt_get(lua_State *L, p_socket ps, int level, int name, void *val, int* len)
 static
 int opt_set(lua_State *L, p_socket ps, int level, int name, void *val, int len)
 {
-    if (setsockopt(*ps, level, name, (char *) val, len) < 0) {
+    if (setsockopt(ps->fd, level, name, (char *) val, len) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, "setsockopt failed");
         return 2;

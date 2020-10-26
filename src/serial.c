@@ -96,14 +96,14 @@ static int meth_setstats(lua_State *L) {
 \*-------------------------------------------------------------------------*/
 static int meth_getfd(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "serial{any}", 1);
-    lua_pushnumber(L, (int) un->sock);
+    lua_pushnumber(L, (int) un->sock.fd);
     return 1;
 }
 
 /* this is very dangerous, but can be handy for those that are brave enough */
 static int meth_setfd(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "serial{any}", 1);
-    un->sock = (t_socket) luaL_checknumber(L, 2);
+    un->sock.fd = (t_socket_fd) luaL_checknumber(L, 2);
     return 0;
 }
 
@@ -148,11 +148,12 @@ static int global_create(lua_State *L) {
     p_unix un = (p_unix) lua_newuserdata(L, sizeof(t_unix));
 
     /* open serial device */
-    t_socket sock = open(path, O_NOCTTY|O_RDWR);
+    un->sock.fd = open(path, O_NOCTTY|O_RDWR);
+    un->sock.blocking = 1;
 
     /*printf("open %s on %d\n", path, sock);*/
 
-    if (sock < 0)  {
+    if (un->sock.fd < 0)  {
         lua_pushnil(L);
         lua_pushstring(L, socket_strerror(errno));
         lua_pushnumber(L, errno);
@@ -161,8 +162,7 @@ static int global_create(lua_State *L) {
     /* set its type as client object */
     auxiliar_setclass(L, "serial{client}", -1);
     /* initialize remaining structure fields */
-    socket_setblocking(&sock, 0);
-    un->sock = sock;
+    socket_setblocking(&un->sock, 0);
     io_init(&un->io, (p_send) socket_write, (p_recv) socket_read,
             (p_error) socket_ioerror, &un->sock);
     timeout_init(&un->tm, -1, -1);

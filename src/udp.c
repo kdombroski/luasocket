@@ -43,6 +43,7 @@ static int meth_getoption(lua_State *L);
 static int meth_settimeout(lua_State *L);
 static int meth_getfd(lua_State *L);
 static int meth_setfd(lua_State *L);
+static int meth_setblocking(lua_State *L);
 static int meth_dirty(lua_State *L);
 
 /* udp object methods */
@@ -66,6 +67,7 @@ static luaL_Reg udp_methods[] = {
     {"setsockname", meth_setsockname},
     {"settimeout",  meth_settimeout},
     {"gettimeout",  meth_gettimeout},
+    {"setblocking", meth_setblocking},
     {NULL,          NULL}
 };
 
@@ -196,7 +198,7 @@ static int meth_sendto(lua_State *L) {
     }
 
     /* create socket if on first sendto if AF_UNSPEC was set */
-    if (udp->family == AF_UNSPEC && udp->sock == SOCKET_INVALID) {
+    if (udp->family == AF_UNSPEC && udp->sock.fd == SOCKET_INVALID) {
         struct addrinfo *ap;
         const char *errstr = NULL;
         for (ap = ai; ap != NULL; ap = ap->ai_next) {
@@ -320,14 +322,14 @@ static int meth_getfamily(lua_State *L) {
 \*-------------------------------------------------------------------------*/
 static int meth_getfd(lua_State *L) {
     p_udp udp = (p_udp) auxiliar_checkgroup(L, "udp{any}", 1);
-    lua_pushnumber(L, (int) udp->sock);
+    lua_pushnumber(L, (int) udp->sock.fd);
     return 1;
 }
 
 /* this is very dangerous, but can be handy for those that are brave enough */
 static int meth_setfd(lua_State *L) {
     p_udp udp = (p_udp) auxiliar_checkgroup(L, "udp{any}", 1);
-    udp->sock = (t_socket) luaL_checknumber(L, 2);
+    udp->sock.fd = (t_socket_fd) luaL_checknumber(L, 2);
     return 0;
 }
 
@@ -447,6 +449,18 @@ static int meth_setsockname(lua_State *L) {
     return 1;
 }
 
+/*-------------------------------------------------------------------------*\
+* Adjust blocking setting on socket
+\*-------------------------------------------------------------------------*/
+static int meth_setblocking(lua_State *L)
+{
+    p_udp udp = (p_udp) auxiliar_checkgroup(L, "udp{any}", 1);
+    udp->sock.blocking = lua_isnil(L, 2) || lua_toboolean(L, 2);
+
+    lua_pushnumber(L, 1);
+    return 1;
+}
+
 /*=========================================================================*\
 * Library functions
 \*=========================================================================*/
@@ -460,7 +474,8 @@ static int udp_create(lua_State *L, int family) {
     /* if family is AF_UNSPEC, we leave the socket invalid and
      * store AF_UNSPEC into family. This will allow it to later be
      * replaced with an AF_INET6 or AF_INET socket upon first use. */
-    udp->sock = SOCKET_INVALID;
+    udp->sock.fd = SOCKET_INVALID;
+    udp->sock.blocking = 1;
     timeout_init(&udp->tm, -1, -1);
     udp->family = family;
     if (family != AF_UNSPEC) {

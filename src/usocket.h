@@ -52,7 +52,11 @@
 #endif /* IPV6_LEAVE_GROUP */
 #endif /* !IPV6_DROP_MEMBERSHIP */
 
-typedef int t_socket;
+typedef int t_socket_fd;
+typedef struct {
+    t_socket_fd fd;
+    int blocking;
+} t_socket;
 typedef t_socket *p_socket;
 typedef struct sockaddr_storage t_sockaddr_storage;
 typedef struct pollfd t_pollfd;

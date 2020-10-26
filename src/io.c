@@ -23,6 +23,7 @@ const char *io_strerror(int err) {
         case IO_DONE: return NULL;
         case IO_CLOSED: return "closed";
         case IO_TIMEOUT: return "timeout";
+        case IO_WOULDBLOCK: return "would block";
         default: return "unknown error";
     }
 }

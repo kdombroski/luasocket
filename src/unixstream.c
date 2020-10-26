@@ -32,6 +32,7 @@ static int meth_dirty(lua_State *L);
 static int meth_getstats(lua_State *L);
 static int meth_setstats(lua_State *L);
 static int meth_getsockname(lua_State *L);
+static int meth_setblocking(lua_State *L);
 
 static const char *unixstream_tryconnect(p_unix un, const char *path);
 static const char *unixstream_trybind(p_unix un, const char *path);
@@ -58,6 +59,7 @@ static luaL_Reg unixstream_methods[] = {
     {"getsockname", meth_getsockname},
     {"settimeout",  meth_settimeout},
     {"shutdown",    meth_shutdown},
+    {"setblocking", meth_setblocking},
     {NULL,          NULL}
 };
 
@@ -133,14 +135,14 @@ static int meth_setoption(lua_State *L) {
 \*-------------------------------------------------------------------------*/
 static int meth_getfd(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unixstream{any}", 1);
-    lua_pushnumber(L, (int) un->sock);
+    lua_pushnumber(L, (int) un->sock.fd);
     return 1;
 }
 
 /* this is very dangerous, but can be handy for those that are brave enough */
 static int meth_setfd(lua_State *L) {
     p_unix un = (p_unix) auxiliar_checkgroup(L, "unixstream{any}", 1);
-    un->sock = (t_socket) luaL_checknumber(L, 2);
+    un->sock.fd = (t_socket_fd) luaL_checknumber(L, 2);
     return 0;
 }
 
@@ -165,7 +167,8 @@ static int meth_accept(lua_State *L) {
         auxiliar_setclass(L, "unixstream{client}", -1);
         /* initialize structure fields */
         socket_setblocking(&sock, 0);
-        clnt->sock = sock;
+        clnt->sock.fd = sock.fd;
+        clnt->sock.blocking = 1;
         io_init(&clnt->io, (p_send)socket_send, (p_recv)socket_recv,
                 (p_error) socket_ioerror, &clnt->sock);
         timeout_init(&clnt->tm, -1, -1);
@@ -221,7 +224,7 @@ static int meth_getsockname(lua_State *L)
     struct sockaddr_un peer = {0};
     socklen_t peer_len = sizeof(peer);
 
-    if (getsockname(un->sock, (SA *) &peer, &peer_len) < 0) {
+    if (getsockname(un->sock.fd, (SA *) &peer, &peer_len) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, socket_strerror(errno));
         return 2;
@@ -324,6 +327,18 @@ static int meth_settimeout(lua_State *L) {
     return timeout_meth_settimeout(L, &un->tm);
 }
 
+/*-------------------------------------------------------------------------*\
+* Adjust blocking setting on socket
+\*-------------------------------------------------------------------------*/
+static int meth_setblocking(lua_State *L)
+{
+    p_unix un = (p_unix) auxiliar_checkgroup(L, "unixstream{any}", 1);
+    un->sock.blocking = lua_isnil(L, 2) || lua_toboolean(L, 2);
+
+    lua_pushnumber(L, 1);
+    return 1;
+}
+
 /*=========================================================================*\
 * Library functions
 \*=========================================================================*/
@@ -341,7 +356,8 @@ static int global_create(lua_State *L) {
         auxiliar_setclass(L, "unixstream{master}", -1);
         /* initialize remaining structure fields */
         socket_setblocking(&sock, 0);
-        un->sock = sock;
+        un->sock.fd = sock.fd;
+        un->sock.blocking = sock.blocking;
         io_init(&un->io, (p_send) socket_send, (p_recv) socket_recv,
                 (p_error) socket_ioerror, &un->sock);
         timeout_init(&un->tm, -1, -1);

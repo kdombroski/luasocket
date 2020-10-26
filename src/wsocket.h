@@ -13,7 +13,11 @@
 
 typedef int socklen_t;
 typedef SOCKADDR_STORAGE t_sockaddr_storage;
-typedef SOCKET t_socket;
+typedef SOCKET t_socket_fd;
+typedef struct {
+    t_socket_fd fd;
+    int blocking;
+} t_socket;
 typedef t_socket *p_socket;
 typedef WSAPOLLFD t_pollfd;
 typedef ULONG t_nfds;

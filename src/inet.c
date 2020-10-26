@@ -243,7 +243,7 @@ int inet_meth_getpeername(lua_State *L, p_socket ps, int family)
     socklen_t peer_len = sizeof(peer);
     char name[INET6_ADDRSTRLEN];
     char port[6]; /* 65535 = 5 bytes + 0 to terminate it */
-    if (getpeername(*ps, (SA *) &peer, &peer_len) < 0) {
+    if (getpeername(ps->fd, (SA *) &peer, &peer_len) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, socket_strerror(errno));
         return 2;
@@ -277,7 +277,7 @@ int inet_meth_getsockname(lua_State *L, p_socket ps, int family)
     socklen_t peer_len = sizeof(peer);
     char name[INET6_ADDRSTRLEN];
     char port[6]; /* 65535 = 5 bytes + 0 to terminate it */
-    if (getsockname(*ps, (SA *) &peer, &peer_len) < 0) {
+    if (getsockname(ps->fd, (SA *) &peer, &peer_len) < 0) {
         lua_pushnil(L);
         lua_pushstring(L, socket_strerror(errno));
         return 2;
@@ -350,7 +350,7 @@ const char *inet_trycreate(p_socket ps, int family, int type, int protocol) {
     const char *err = socket_strerror(socket_create(ps, family, type, protocol));
     if (err == NULL && family == AF_INET6) {
         int yes = 1;
-        setsockopt(*ps, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&yes, sizeof(yes));
+        setsockopt(ps->fd, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&yes, sizeof(yes));
     }
     return err;
 }
@@ -405,7 +405,7 @@ const char *inet_tryconnect(p_socket ps, int *family, const char *address,
          * that shows up while iterating. if there was a
          * bind, all families will be the same and we will
          * not enter this branch. */
-        if (current_family != iterator->ai_family || *ps == SOCKET_INVALID) {
+        if (current_family != iterator->ai_family || ps->fd == SOCKET_INVALID) {
             socket_destroy(ps);
             err = inet_trycreate(ps, iterator->ai_family,
                 iterator->ai_socktype, iterator->ai_protocol);
@@ -463,7 +463,7 @@ const char *inet_trybind(p_socket ps, int *family, const char *address,
     }
     /* iterate over resolved addresses until one is good */
     for (iterator = resolved; iterator; iterator = iterator->ai_next) {
-        if (current_family != iterator->ai_family || *ps == SOCKET_INVALID) {
+        if (current_family != iterator->ai_family || ps->fd == SOCKET_INVALID) {
             socket_destroy(ps);
             err = inet_trycreate(ps, iterator->ai_family,
                         iterator->ai_socktype, iterator->ai_protocol);

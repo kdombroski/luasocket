@@ -38,6 +38,7 @@ static int meth_gettimeout(lua_State *L);
 static int meth_settimeout(lua_State *L);
 static int meth_getfd(lua_State *L);
 static int meth_setfd(lua_State *L);
+static int meth_setblocking(lua_State *L);
 static int meth_dirty(lua_State *L);
 
 /* tcp object methods */
@@ -66,6 +67,7 @@ static luaL_Reg tcp_methods[] = {
     {"settimeout",  meth_settimeout},
     {"gettimeout",  meth_gettimeout},
     {"shutdown",    meth_shutdown},
+    {"setblocking", meth_setblocking},
     {NULL,          NULL}
 };
 
@@ -186,7 +188,7 @@ static int meth_setoption(lua_State *L)
 static int meth_getfd(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
-    lua_pushnumber(L, (int) tcp->sock);
+    lua_pushnumber(L, (int) tcp->sock.fd);
     return 1;
 }
 
@@ -194,7 +196,7 @@ static int meth_getfd(lua_State *L)
 static int meth_setfd(lua_State *L)
 {
     p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
-    tcp->sock = (t_socket) luaL_checknumber(L, 2);
+    tcp->sock.fd = (t_socket_fd) luaL_checknumber(L, 2);
     return 0;
 }
 
@@ -222,7 +224,8 @@ static int meth_accept(lua_State *L)
         /* initialize structure fields */
         memset(clnt, 0, sizeof(t_tcp));
         socket_setblocking(&sock, 0);
-        clnt->sock = sock;
+        clnt->sock.fd = sock.fd;
+        clnt->sock.blocking = 1;
         io_init(&clnt->io, (p_send) socket_send, (p_recv) socket_recv,
                 (p_error) socket_ioerror, &clnt->sock);
         timeout_init(&clnt->tm, -1, -1);
@@ -378,6 +381,18 @@ static int meth_gettimeout(lua_State *L)
     return timeout_meth_gettimeout(L, &tcp->tm);
 }
 
+/*-------------------------------------------------------------------------*\
+* Adjust blocking setting on socket
+\*-------------------------------------------------------------------------*/
+static int meth_setblocking(lua_State *L)
+{
+    p_tcp tcp = (p_tcp) auxiliar_checkgroup(L, "tcp{any}", 1);
+    tcp->sock.blocking = lua_isnil(L, 2) || lua_toboolean(L, 2);
+
+    lua_pushnumber(L, 1);
+    return 1;
+}
+
 /*=========================================================================*\
 * Library functions
 \*=========================================================================*/
@@ -392,7 +407,8 @@ static int tcp_create(lua_State *L, int family) {
     /* if family is AF_UNSPEC, we leave the socket invalid and
      * store AF_UNSPEC into family. This will allow it to later be
      * replaced with an AF_INET6 or AF_INET socket upon first use. */
-    tcp->sock = SOCKET_INVALID;
+    tcp->sock.fd = SOCKET_INVALID;
+    tcp->sock.blocking = 1;
     tcp->family = family;
     io_init(&tcp->io, (p_send) socket_send, (p_recv) socket_recv,
             (p_error) socket_ioerror, &tcp->sock);
@@ -437,7 +453,8 @@ static int global_connect(lua_State *L) {
             (p_error) socket_ioerror, &tcp->sock);
     timeout_init(&tcp->tm, -1, -1);
     buffer_init(&tcp->buf, &tcp->io, &tcp->tm);
-    tcp->sock = SOCKET_INVALID;
+    tcp->sock.fd = SOCKET_INVALID;
+    tcp->sock.blocking = 1;
     tcp->family = AF_UNSPEC;
     /* allow user to pick local address and port */
     memset(&bindhints, 0, sizeof(bindhints));

@@ -13,7 +13,7 @@
 /*=========================================================================*\
 * Internal function prototypes.
 \*=========================================================================*/
-static t_socket getfd(lua_State *L);
+static t_socket_fd getfd(lua_State *L);
 static void unpackpfd(lua_State *L, t_pollfd* pfd);
 static int eventbit(char const *str);
 static int unpackevents(lua_State *L);
@@ -132,8 +132,8 @@ static int global_poll(lua_State *L) {
 /*=========================================================================*\
 * Internal functions
 \*=========================================================================*/
-static t_socket getfd(lua_State *L) {
-    t_socket fd = SOCKET_INVALID;
+static t_socket_fd getfd(lua_State *L) {
+    t_socket_fd fd = SOCKET_INVALID;
     lua_pushstring(L, "getfd");
     lua_gettable(L, -2);
     if (!lua_isnil(L, -1)) {
@@ -141,7 +141,7 @@ static t_socket getfd(lua_State *L) {
         lua_call(L, 1, 1);
         if (lua_isnumber(L, -1)) {
             double numfd = lua_tonumber(L, -1);
-            fd = (numfd >= 0.0)? (t_socket) numfd: SOCKET_INVALID;
+            fd = (numfd >= 0.0)? (t_socket_fd) numfd: SOCKET_INVALID;
         }
     }
     lua_pop(L, 1);

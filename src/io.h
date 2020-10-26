@@ -19,8 +19,9 @@
 enum {
     IO_DONE = 0,        /* operation completed successfully */
     IO_TIMEOUT = -1,    /* operation timed out */
-    IO_CLOSED = -2,     /* the connection has been closed */
-	IO_UNKNOWN = -3
+    IO_WOULDBLOCK = -2, /* the operation timed out (non-blocking) */
+    IO_CLOSED = -3,     /* the connection has been closed */
+    IO_UNKNOWN = -4
 };
 
 /* interface to error message function */
