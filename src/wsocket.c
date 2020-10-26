@@ -104,7 +104,7 @@ int socket_poll(t_pollfd *fds, t_nfds n, int msec) {
 \*-------------------------------------------------------------------------*/
 void socket_destroy(p_socket ps) {
     if (*ps != SOCKET_INVALID) {
-        socket_setblocking(ps); /* close can take a long time on WIN32 */
+        socket_setblocking(ps, 1); /* close can take a long time on WIN32 */
         closesocket(*ps);
         *ps = SOCKET_INVALID;
     }
@@ -114,9 +114,9 @@ void socket_destroy(p_socket ps) {
 *
 \*-------------------------------------------------------------------------*/
 void socket_shutdown(p_socket ps, int how) {
-    socket_setblocking(ps);
+    socket_setblocking(ps, 1);
     shutdown(*ps, how);
-    socket_setnonblocking(ps);
+    socket_setblocking(ps, 0);
 }
 
 /*-------------------------------------------------------------------------*\
@@ -162,9 +162,9 @@ int socket_connect(p_socket ps, SA *addr, socklen_t len, p_timeout tm) {
 \*-------------------------------------------------------------------------*/
 int socket_bind(p_socket ps, SA *addr, socklen_t len) {
     int err = IO_DONE;
-    socket_setblocking(ps);
+    socket_setblocking(ps, 1);
     if (bind(*ps, addr, len) < 0) err = WSAGetLastError();
-    socket_setnonblocking(ps);
+    socket_setblocking(ps, 0);
     return err;
 }
 
@@ -173,9 +173,9 @@ int socket_bind(p_socket ps, SA *addr, socklen_t len) {
 \*-------------------------------------------------------------------------*/
 int socket_listen(p_socket ps, int backlog) {
     int err = IO_DONE;
-    socket_setblocking(ps);
+    socket_setblocking(ps, 1);
     if (listen(*ps, backlog) < 0) err = WSAGetLastError();
-    socket_setnonblocking(ps);
+    socket_setblocking(ps, 0);
     return err;
 }
 
@@ -309,18 +309,10 @@ int socket_recvfrom(p_socket ps, char *data, size_t count, size_t *got,
 }
 
 /*-------------------------------------------------------------------------*\
-* Put socket into blocking mode
+* Put socket into blocking or non-blocking mode
 \*-------------------------------------------------------------------------*/
-void socket_setblocking(p_socket ps) {
-    u_long argp = 0;
-    ioctlsocket(*ps, FIONBIO, &argp);
-}
-
-/*-------------------------------------------------------------------------*\
-* Put socket into non-blocking mode
-\*-------------------------------------------------------------------------*/
-void socket_setnonblocking(p_socket ps) {
-    u_long argp = 1;
+void socket_setblocking(p_socket ps, int state) {
+    u_long argp = state ? 0 : 1;
     ioctlsocket(*ps, FIONBIO, &argp);
 }
 

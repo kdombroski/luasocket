@@ -141,9 +141,9 @@ int socket_create(p_socket ps, int domain, int type, int protocol) {
 \*-------------------------------------------------------------------------*/
 int socket_bind(p_socket ps, SA *addr, socklen_t len) {
     int err = IO_DONE;
-    socket_setblocking(ps);
+    socket_setblocking(ps, 1);
     if (bind(*ps, addr, len) < 0) err = errno;
-    socket_setnonblocking(ps);
+    socket_setblocking(ps, 0);
     return err;
 }
 
@@ -369,20 +369,15 @@ int socket_read(p_socket ps, char *data, size_t count, size_t *got, p_timeout tm
 }
 
 /*-------------------------------------------------------------------------*\
-* Put socket into blocking mode
+* Put socket into blocking or non-blocking mode
 \*-------------------------------------------------------------------------*/
-void socket_setblocking(p_socket ps) {
+void socket_setblocking(p_socket ps, int state) {
     int flags = fcntl(*ps, F_GETFL, 0);
-    flags &= (~(O_NONBLOCK));
-    fcntl(*ps, F_SETFL, flags);
-}
-
-/*-------------------------------------------------------------------------*\
-* Put socket into non-blocking mode
-\*-------------------------------------------------------------------------*/
-void socket_setnonblocking(p_socket ps) {
-    int flags = fcntl(*ps, F_GETFL, 0);
-    flags |= O_NONBLOCK;
+    if (state) {
+        flags &= (~(O_NONBLOCK));
+    } else {
+        flags |= (O_NONBLOCK);
+    }
     fcntl(*ps, F_SETFL, flags);
 }
 

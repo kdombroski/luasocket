@@ -58,8 +58,7 @@ int socket_recv(p_socket ps, char *data, size_t count, size_t *got, p_timeout tm
 int socket_recvfrom(p_socket ps, char *data, size_t count, size_t *got, SA *addr, socklen_t *addr_len, p_timeout tm);
 int socket_write(p_socket ps, const char *data, size_t count, size_t *sent, p_timeout tm);
 int socket_read(p_socket ps, char *data, size_t count, size_t *got, p_timeout tm);
-void socket_setblocking(p_socket ps);
-void socket_setnonblocking(p_socket ps);
+void socket_setblocking(p_socket ps, int state);
 int socket_gethostbyaddr(const char *addr, socklen_t len, struct hostent **hp);
 int socket_gethostbyname(const char *addr, struct hostent **hp);
 const char *socket_hoststrerror(int err);

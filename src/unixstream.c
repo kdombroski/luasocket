@@ -164,7 +164,7 @@ static int meth_accept(lua_State *L) {
         p_unix clnt = (p_unix) lua_newuserdata(L, sizeof(t_unix));
         auxiliar_setclass(L, "unixstream{client}", -1);
         /* initialize structure fields */
-        socket_setnonblocking(&sock);
+        socket_setblocking(&sock, 0);
         clnt->sock = sock;
         io_init(&clnt->io, (p_send)socket_send, (p_recv)socket_recv,
                 (p_error) socket_ioerror, &clnt->sock);
@@ -340,7 +340,7 @@ static int global_create(lua_State *L) {
         /* set its type as master object */
         auxiliar_setclass(L, "unixstream{master}", -1);
         /* initialize remaining structure fields */
-        socket_setnonblocking(&sock);
+        socket_setblocking(&sock, 0);
         un->sock = sock;
         io_init(&un->io, (p_send) socket_send, (p_recv) socket_recv,
                 (p_error) socket_ioerror, &un->sock);

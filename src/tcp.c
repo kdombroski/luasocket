@@ -221,7 +221,7 @@ static int meth_accept(lua_State *L)
         auxiliar_setclass(L, "tcp{client}", -1);
         /* initialize structure fields */
         memset(clnt, 0, sizeof(t_tcp));
-        socket_setnonblocking(&sock);
+        socket_setblocking(&sock, 0);
         clnt->sock = sock;
         io_init(&clnt->io, (p_send) socket_send, (p_recv) socket_recv,
                 (p_error) socket_ioerror, &clnt->sock);
@@ -405,7 +405,7 @@ static int tcp_create(lua_State *L, int family) {
             lua_pushstring(L, err);
             return 2;
         }
-        socket_setnonblocking(&tcp->sock);
+        socket_setblocking(&tcp->sock, 0);
     }
     return 1;
 }

@@ -202,7 +202,7 @@ static int meth_sendto(lua_State *L) {
         for (ap = ai; ap != NULL; ap = ap->ai_next) {
             errstr = inet_trycreate(&udp->sock, ap->ai_family, SOCK_DGRAM, 0);
             if (errstr == NULL) {
-                socket_setnonblocking(&udp->sock);
+                socket_setblocking(&udp->sock, 0);
                 udp->family = ap->ai_family;
                 break;
             }
@@ -470,7 +470,7 @@ static int udp_create(lua_State *L, int family) {
             lua_pushstring(L, err);
             return 2;
         }
-        socket_setnonblocking(&udp->sock);
+        socket_setblocking(&udp->sock, 0);
     }
     return 1;
 }

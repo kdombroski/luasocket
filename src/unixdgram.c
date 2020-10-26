@@ -390,7 +390,7 @@ static int global_create(lua_State *L)
         /* set its type as master object */
         auxiliar_setclass(L, "unixdgram{unconnected}", -1);
         /* initialize remaining structure fields */
-        socket_setnonblocking(&sock);
+        socket_setblocking(&sock, 0);
         un->sock = sock;
         io_init(&un->io, (p_send) socket_send, (p_recv) socket_recv,
                 (p_error) socket_ioerror, &un->sock);

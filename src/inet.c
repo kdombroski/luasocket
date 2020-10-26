@@ -412,7 +412,7 @@ const char *inet_tryconnect(p_socket ps, int *family, const char *address,
             if (err) continue;
             current_family = iterator->ai_family;
             /* set non-blocking before connect */
-            socket_setnonblocking(ps);
+            socket_setblocking(ps, 0);
         }
         /* try connecting to remote address */
         err = socket_strerror(socket_connect(ps, (SA *) iterator->ai_addr,
@@ -477,7 +477,7 @@ const char *inet_trybind(p_socket ps, int *family, const char *address,
         if (err == NULL) {
             *family = current_family;
             /* set to non-blocking after bind */
-            socket_setnonblocking(ps);
+            socket_setblocking(ps, 0);
             break;
         }
     }
