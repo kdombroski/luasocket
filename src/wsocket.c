@@ -88,6 +88,18 @@ int socket_select(t_socket n, fd_set *rfds, fd_set *wfds, fd_set *efds,
 }
 
 /*-------------------------------------------------------------------------*\
+* Simple poll wrapper
+\*-------------------------------------------------------------------------*/
+int socket_poll(t_pollfd *fds, t_nfds n, int msec) {
+    if (n == 0) {
+        return 0;
+    }
+
+    // TODO massage events/revents into something that matches the unix implementation
+    return WSAPoll(fds, n, msec);
+}
+
+/*-------------------------------------------------------------------------*\
 * Close and inutilize socket
 \*-------------------------------------------------------------------------*/
 void socket_destroy(p_socket ps) {

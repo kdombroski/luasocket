@@ -30,6 +30,8 @@
 /* TCP options (nagle algorithm disable) */
 #include <netinet/tcp.h>
 #include <net/if.h>
+/* poll */
+#include <sys/poll.h>
 
 #ifndef SO_REUSEPORT
 #define SO_REUSEPORT SO_REUSEADDR
@@ -53,6 +55,8 @@
 typedef int t_socket;
 typedef t_socket *p_socket;
 typedef struct sockaddr_storage t_sockaddr_storage;
+typedef struct pollfd t_pollfd;
+typedef nfds_t t_nfds;
 
 #define SOCKET_INVALID (-1)
 

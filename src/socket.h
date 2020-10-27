@@ -45,6 +45,7 @@ int socket_open(void);
 int socket_close(void);
 void socket_destroy(p_socket ps);
 int socket_select(t_socket n, fd_set *rfds, fd_set *wfds, fd_set *efds, p_timeout tm);
+int socket_poll(t_pollfd *fds, t_nfds n, int msec);
 int socket_create(p_socket ps, int domain, int type, int protocol);
 int socket_bind(p_socket ps, SA *addr, socklen_t addr_len); 
 int socket_listen(p_socket ps, int backlog);

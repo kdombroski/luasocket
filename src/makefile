@@ -306,6 +306,7 @@ SOCKET_OBJS= \
 	$(SOCKET) \
 	except.$(O) \
 	select.$(O) \
+	poll.$(O) \
 	tcp.$(O) \
 	udp.$(O)
 
@@ -443,11 +444,12 @@ inet.$(O): inet.c inet.h socket.h io.h timeout.h usocket.h
 io.$(O): io.c io.h timeout.h
 luasocket.$(O): luasocket.c luasocket.h auxiliar.h except.h \
 	timeout.h buffer.h io.h inet.h socket.h usocket.h tcp.h \
-	udp.h select.h
+	udp.h select.h poll.h
 mime.$(O): mime.c mime.h
 options.$(O): options.c auxiliar.h options.h socket.h io.h \
 	timeout.h usocket.h inet.h
 select.$(O): select.c socket.h io.h timeout.h usocket.h select.h
+poll.$(O): poll.c socket.h usocket.h poll.h
 serial.$(O): serial.c auxiliar.h socket.h io.h timeout.h usocket.h \
   options.h unix.h buffer.h
 tcp.$(O): tcp.c auxiliar.h socket.h io.h timeout.h usocket.h \

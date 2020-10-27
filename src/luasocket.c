@@ -21,6 +21,7 @@
 #include "tcp.h"
 #include "udp.h"
 #include "select.h"
+#include "poll.h"
 
 /*-------------------------------------------------------------------------*\
 * Internal function prototypes
@@ -41,6 +42,7 @@ static const luaL_Reg mod[] = {
     {"tcp", tcp_open},
     {"udp", udp_open},
     {"select", select_open},
+    {"poll", poll_open},
     {NULL, NULL}
 };
 

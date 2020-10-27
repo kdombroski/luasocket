@@ -118,6 +118,16 @@ int socket_select(t_socket n, fd_set *rfds, fd_set *wfds, fd_set *efds,
 }
 
 /*-------------------------------------------------------------------------*\
+* Simple poll wrapper
+\*-------------------------------------------------------------------------*/
+int socket_poll(t_pollfd *fds, t_nfds n, int msec) {
+    if (n == 0) {
+        return 0;
+    }
+    return poll(fds, n, msec);
+}
+
+/*-------------------------------------------------------------------------*\
 * Creates and sets up a socket
 \*-------------------------------------------------------------------------*/
 int socket_create(p_socket ps, int domain, int type, int protocol) {
